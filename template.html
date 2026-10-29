@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Médongaule Image Archive</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&display=swap">
+<style>
+  /* Layout after the Médongaule homepage collage: a logo box and one tall photograph held in the left column, the
+     menu across the top, and the photographs set as mosaics on a 24-column grid, spread after spread. Each spread
+     keeps a little of the reference's empty space (a cell left open beside a small photo). Web-size photographs only. */
+  :root {
+    color-scheme: light;
+    --bg: #ffffff;
+    --fg: #111111;
+    --mute: #8a8a85;
+    --line: #111111;
+    --gap: 10px;
+    --side: 190px;
+    --pad: clamp(16px, 3.2vw, 64px);
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #0f0f0e; --fg: #ecebe6; --mute: #85847e; --line: #ecebe6; color-scheme: dark; } }
+  :root[data-theme="dark"] { --bg: #0f0f0e; --fg: #ecebe6; --mute: #85847e; --line: #ecebe6; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html { background: var(--bg); scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 500 15px/1.4 "Jost", "Futura", "Avenir Next", sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+  img { display: block; max-width: 100%; }
+  :focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
+
+  .page { display: grid; grid-template-columns: var(--side) minmax(0, 1fr); column-gap: clamp(28px, 3.3vw, 64px); padding: 38px var(--pad) 0; }
+
+  /* left: the logo box with its visit bar, and one tall photograph that follows the spread in view */
+  .side { position: sticky; top: 38px; align-self: start; display: grid; row-gap: 16px; }
+  .logo { display: grid; border: 2px solid var(--line); background: var(--bg); }
+  .logo .mark { display: grid; place-items: center; aspect-ratio: 190 / 188; padding: 0 16px; }
+  .logo .mark svg { width: 100%; height: auto; overflow: visible; fill: var(--fg); fill-rule: evenodd; }
+  .logo .visit { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px 7px; background: var(--fg); color: var(--bg); font-weight: 400; font-size: 16px; letter-spacing: -0.01em; }
+  .logo .visit svg { width: 15px; height: 15px; transition: transform 0.4s var(--ease); }
+  .logo .visit:hover svg { transform: translate(2px, -2px); }
+  .feature { position: relative; aspect-ratio: 186 / 525; overflow: hidden; background: color-mix(in srgb, var(--fg) 6%, var(--bg)); cursor: zoom-in; }
+  .feature img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.9s var(--ease); }
+  .feature img.on { opacity: 1; }
+
+  /* top: the menu, which filters the archive, and the index */
+  .top { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 0 0 22px; margin-top: -4px; background: var(--bg); }
+  .menu { display: flex; gap: clamp(22px, 3.3vw, 52px); font-weight: 600; font-size: clamp(15px, 1.1vw, 20px); letter-spacing: 0.01em; text-transform: uppercase; }
+  .menu button { position: relative; padding: 4px 0; }
+  .menu button::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: currentColor; transform: scaleX(0); transform-origin: left; transition: transform 0.5s var(--ease); }
+  .menu button:hover::after, .menu button[aria-pressed="true"]::after { transform: scaleX(1); }
+  .menu sup { font-size: 0.55em; font-weight: 500; margin-left: 3px; color: var(--mute); }
+  .tools { display: flex; align-items: center; gap: clamp(18px, 2.2vw, 34px); }
+  .match { display: inline-flex; align-items: center; gap: 9px; font-weight: 600; font-size: clamp(13px, 0.9vw, 16px); text-transform: uppercase; letter-spacing: 0.02em; padding: 6px 12px 6px 8px; border: 2px solid var(--line); border-radius: 999px; transition: background-color 0.35s var(--ease), color 0.35s var(--ease); }
+  .match svg { width: 22px; height: 16px; }
+  .match[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+  .pal-bar { display: flex; height: 12px; margin-bottom: 12px; overflow: hidden; }
+  .pal-bar i { display: block; height: 100%; transform-origin: left; transform: scaleX(0); transition: transform 1.1s var(--ease); }
+  .spread.in .pal-bar i { transform: scaleX(1); }
+  .spread.in .pal-bar i:nth-child(2) { transition-delay: .06s; } .spread.in .pal-bar i:nth-child(3) { transition-delay: .12s; } .spread.in .pal-bar i:nth-child(4) { transition-delay: .18s; } .spread.in .pal-bar i:nth-child(5) { transition-delay: .24s; } .spread.in .pal-bar i:nth-child(6) { transition-delay: .3s; } .spread.in .pal-bar i:nth-child(7) { transition-delay: .36s; }
+  .spread .pal-bar { grid-column: 1 / -1; grid-row: 1; align-self: end; }
+  .harmony .spread { grid-template-rows: 24px; grid-auto-rows: calc((100cqw - 23 * var(--gap)) / 24 * 1.46); }
+  .harmony .t { grid-row: calc(var(--r) + 1) / span var(--rs); }
+  .lb { grid-template-rows: auto minmax(0, 1fr) auto auto; }
+  .lb-match { display: flex; align-items: center; gap: 18px; padding: 4px 0 14px; min-height: 76px; }
+  .lb-match .chips { display: flex; flex: none; }
+  .lb-match .chips i { width: 22px; height: 56px; }
+  .lb-match .lab { flex: none; font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; color: var(--mute); }
+  .lb-match .near { display: flex; gap: var(--gap); min-width: 0; overflow-x: auto; scrollbar-width: none; }
+  .lb-match .near button { flex: none; height: 56px; overflow: hidden; }
+  .lb-match .near img { height: 100%; width: auto; transition: transform .5s var(--ease); }
+  .lb-match .near button:hover img { transform: scale(1.06); }
+  .burger { width: 30px; height: 22px; display: grid; align-content: space-between; }
+  .burger i { display: block; height: 3px; background: currentColor; transition: transform 0.4s var(--ease), opacity 0.3s; }
+  .burger[aria-expanded="true"] i:nth-child(1) { transform: translateY(9.5px) rotate(45deg); }
+  .burger[aria-expanded="true"] i:nth-child(2) { opacity: 0; }
+  .burger[aria-expanded="true"] i:nth-child(3) { transform: translateY(-9.5px) rotate(-45deg); }
+
+  /* the mosaics: 24 columns, rows tied to the column width so every spread keeps its proportions */
+  .main { container-type: inline-size; min-width: 0; }
+  .spread { display: grid; grid-template-columns: repeat(24, minmax(0, 1fr)); grid-auto-rows: calc((100cqw - 23 * var(--gap)) / 24 * 1.46); gap: var(--gap); }
+  .spread + .spread { margin-top: clamp(48px, 6vw, 96px); }
+  .t { position: relative; overflow: hidden; grid-column: var(--c) / span var(--cs); grid-row: var(--r) / span var(--rs); background: color-mix(in srgb, var(--fg) 6%, var(--bg)); cursor: zoom-in; }
+  .t img { width: 100%; height: 100%; object-fit: cover; transition: transform 1.2s var(--ease); }
+  .t:hover img { transform: scale(1.035); }
+  .js .t { opacity: 0; transform: translateY(14px); transition: opacity 0.9s var(--ease), transform 1.1s var(--ease); transition-delay: calc(var(--k) * 60ms); }
+  .js .spread.in .t { opacity: 1; transform: none; }
+
+  .foot { text-align: center; padding: clamp(56px, 7vw, 110px) 0 calc(36px + env(safe-area-inset-bottom, 0px)); font-size: 14px; }
+  .foot p { margin: 0; }
+  .foot .mute { color: var(--mute); margin-top: 6px; font-weight: 400; }
+
+  /* the index: every photograph at once */
+  .index { position: fixed; inset: 0; z-index: 30; background: var(--bg); overflow: auto; padding: 38px var(--pad) 48px; opacity: 0; visibility: hidden; transition: opacity 0.4s var(--ease), visibility 0s 0.4s; }
+  .index.open { opacity: 1; visibility: visible; transition: opacity 0.4s var(--ease); }
+  .index-head { position: sticky; top: -38px; z-index: 1; display: flex; justify-content: space-between; align-items: center; padding: 0 0 22px; background: var(--bg); font-weight: 600; font-size: clamp(15px, 1.1vw, 20px); text-transform: uppercase; }
+  .index-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: var(--gap); }
+  .index-grid button { aspect-ratio: 1; overflow: hidden; background: color-mix(in srgb, var(--fg) 6%, var(--bg)); }
+  .index-grid img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s var(--ease), opacity 0.3s; }
+  .index-grid button:hover img { transform: scale(1.06); }
+
+  /* one photograph at a time */
+  .lb { position: fixed; inset: 0; z-index: 40; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; background: var(--bg); padding: 26px var(--pad) 22px; opacity: 0; visibility: hidden; transition: opacity 0.35s var(--ease), visibility 0s 0.35s; }
+  .lb.open { opacity: 1; visibility: visible; transition: opacity 0.35s var(--ease); }
+  .lb-top, .lb-bot { display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+  .lb-top b { font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em; }
+  .lb-stage { position: relative; display: grid; place-items: center; min-height: 0; padding: 18px 0; }
+  .lb-stage img { position: absolute; inset: 18px 0; margin: auto; width: auto; height: auto; max-width: 100%; max-height: calc(100% - 36px); object-fit: contain; opacity: 0; transform: scale(0.985); transition: opacity 0.4s var(--ease), transform 0.7s var(--ease); }
+  .lb-stage img.on { opacity: 1; transform: none; }
+  .lb-p, .lb-n { position: absolute; top: 0; bottom: 0; width: 50%; }
+  .lb-p { left: 0; cursor: w-resize; } .lb-n { right: 0; cursor: e-resize; }
+  .lb-x { width: 30px; height: 30px; display: grid; place-items: center; }
+  .lb-x svg, .lb-arrows svg { width: 18px; height: 18px; }
+  .lb-arrows { display: flex; gap: 18px; }
+  .lb-arrows button { width: 30px; height: 30px; display: grid; place-items: center; }
+
+  @media (max-width: 860px) {
+    :root { --side: 100%; }
+    .page { grid-template-columns: minmax(0, 1fr); padding-top: 20px; }
+    .side { position: static; grid-template-columns: 150px minmax(0, 1fr); column-gap: 14px; margin-bottom: 18px; }
+    .feature { aspect-ratio: auto; height: 100%; }
+    .top { padding-bottom: 14px; }
+    .menu { gap: 18px; font-size: 14px; overflow-x: auto; }
+    .match span { display: none; }
+    .harmony .t { grid-row: auto; }
+    .harmony .spread { grid-auto-rows: auto; grid-template-rows: auto; }
+    .lb-match .lab { display: none; }
+    .spread { grid-template-columns: 1fr 1fr; grid-auto-rows: auto; grid-auto-flow: dense; }
+    .t { grid-column: auto; grid-row: auto; aspect-ratio: 4 / 5; }
+    .t[data-o="L"] { grid-column: 1 / -1; aspect-ratio: 3 / 2; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .js .t { opacity: 1; transform: none; transition: none; }
+    .t img, .feature img { transition: none; }
+  }
+</style></head>
+<body>
+<div class="page">
+  <aside class="side">
+    <div class="logo">
+      <a class="mark" href="#top" aria-label="Médongaule, back to the top">{{WORDMARK}}</a>
+      <a class="visit" href="https://claude.ai/artifact/QK9midJN5oqGMwhNbscfcE" target="_blank" rel="noopener">Plan Your Visit <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M3 13L13 3M5 3h8v8"/></svg></a>
+    </div>
+    <div class="feature" id="feature" role="button" tabindex="0" aria-label="Open this photograph"><img alt=""><img alt=""></div>
+  </aside>
+  <main class="main" id="top">
+    <header class="top">
+      <nav class="menu" aria-label="Filter the archive" id="menu">
+        <button type="button" data-c="" aria-pressed="true">All<sup></sup></button>
+        <button type="button" data-c="g" aria-pressed="false">Gardens<sup></sup></button>
+        <button type="button" data-c="p" aria-pressed="false">People<sup></sup></button>
+        <button type="button" data-c="b" aria-pressed="false">Build-up<sup></sup></button>
+      </nav>
+      <div class="tools">
+        <button class="match" id="match" type="button" aria-pressed="false" title="Group photographs whose colours sit together"><svg viewBox="0 0 22 16" aria-hidden="true"><circle cx="6" cy="8" r="5.2" fill="#c9442a"/><circle cx="11" cy="8" r="5.2" fill="#c8b98a" style="mix-blend-mode:multiply"/><circle cx="16" cy="8" r="5.2" fill="#4f6b3c" style="mix-blend-mode:multiply"/></svg><span>Colour Match</span></button>
+        <button class="burger" id="burger" type="button" aria-label="Open the index" aria-expanded="false" aria-controls="index"><i></i><i></i><i></i></button>
+      </div>
+    </header>
+    <div id="spreads"></div>
+    <footer class="foot">
+      <p>1, Medeonggol-gil, Yangdong-myeon, Yangpyeong-gun, Gyeonggi-do / OPEN 10:00 AM - 06:00PM</p>
+      <p class="mute" id="count"></p>
+    </footer>
+  </main>
+</div>
+
+<div class="index" id="index" aria-label="Index of every photograph">
+  <div class="index-head"><span>Index</span><button class="burger" type="button" aria-label="Close the index" aria-expanded="true" id="indexClose"><i></i><i></i><i></i></button></div>
+  <div class="index-grid" id="indexGrid"></div>
+</div>
+
+<div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Photograph">
+  <div class="lb-top"><b id="lbCat"></b><button class="lb-x" id="lbX" type="button" aria-label="Close"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 2l12 12M14 2L2 14"/></svg></button></div>
+  <div class="lb-stage"><img id="lbImg" alt=""><button class="lb-p" id="lbP" type="button" aria-label="Previous"></button><button class="lb-n" id="lbN" type="button" aria-label="Next"></button></div>
+  <div class="lb-match"><span class="chips" id="lbChips" aria-label="Palette"></span><span class="lab">Sits with</span><span class="near" id="lbNear"></span></div>
+  <div class="lb-bot"><span id="lbNum"></span><span class="lb-arrows"><button type="button" id="lbP2" aria-label="Previous"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M10 2L4 8l6 6"/></svg></button><button type="button" id="lbN2" aria-label="Next"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M6 2l6 6-6 6"/></svg></button></span></div>
+</div>
+
+<script>
+(() => {
+  const ALL = {{MANIFEST}};
+  const CAT = { g: "Gardens", p: "People", b: "Build-up" };
+  const $ = (s) => document.querySelector(s);
+  const root = document.documentElement;
+  root.classList.add("js");
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* spreads on 24 columns × 7 rows: [column, columns, row, rows]; the first is the reference layout itself */
+  const T = [
+    [[1, 9, 1, 3], [10, 7, 1, 3], [17, 8, 1, 7], [1, 5, 4, 4], [6, 6, 4, 4], [12, 3, 4, 2], [12, 5, 6, 2]],
+    [[1, 8, 1, 7], [9, 10, 1, 4], [19, 6, 1, 3], [19, 4, 4, 2], [9, 5, 5, 3], [14, 11, 6, 2]],
+    [[1, 12, 1, 4], [13, 6, 1, 3], [19, 6, 1, 4], [13, 4, 4, 2], [1, 5, 5, 3], [6, 7, 5, 3], [17, 8, 5, 3]],
+    [[1, 6, 1, 4], [7, 11, 1, 4], [18, 7, 1, 7], [1, 4, 5, 3], [5, 3, 5, 2], [8, 10, 5, 3]],
+  ];
+  const ar = (s) => (s[1] * 1 + (s[1] - 1) * 0.157) / (s[3] * 1.46 + (s[3] - 1) * 0.157);   // gap ≈ 0.157 column
+  const orient = (w, h) => (w / h > 1.15 ? "L" : w / h < 0.87 ? "P" : "S");
+  // a tall frame shows the photograph's own mobile cut where there is one, instead of cropping the web image
+  const shape = (it, tall) => (tall && it.m ? it.mw / it.mh : it.w / it.h);
+
+  /* each slot takes, from the next few photographs in line, the one whose shape suits it best */
+  function plan(list) {
+    const q = list.slice(), spreads = [];
+    let k = 0;
+    while (q.length) {
+      let tpl = T[k % T.length].map((s) => s.slice());
+      if (Math.floor(k / T.length) % 2) tpl = tpl.map(([c, cs, r, rs]) => [26 - c - cs, cs, r, rs]);   // every other round, mirrored
+      const order = tpl.map((s, i) => [i, Math.abs(Math.log(ar(s)))]).sort((a, b) => b[1] - a[1]).map((x) => x[0]);
+      const tiles = [];
+      // the tall photograph in the left column for this spread
+      let fi = q.slice(0, 18).findIndex((it) => it.m && it.mw / it.mh < 0.8 && !it.x);
+      if (fi < 0) fi = q.slice(0, 14).findIndex((it) => it.w / it.h < 0.8 && !it.x);
+      const feature = fi >= 0 ? q.splice(fi, 1)[0] : null;
+      for (const i of order) {
+        if (!q.length) break;
+        const tall = ar(tpl[i]) < 0.9, want = Math.log(ar(tpl[i])); let best = 0, bd = 1e9;
+        for (let j = 0; j < Math.min(tall ? 16 : 10, q.length); j++) {
+          const d = Math.abs(Math.log(shape(q[j], tall)) - want) + j * 0.02 - (tall && q[j].m ? 0.35 : 0);
+          if (d < bd) { bd = d; best = j; }
+        }
+        const it = q.splice(best, 1)[0];
+        tiles.push({ slot: tpl[i], it, k: i, mob: tall && !!it.m });
+      }
+      tiles.sort((a, b) => a.k - b.k);
+      spreads.push({ tiles, feature });
+      k++;
+    }
+    return spreads;
+  }
+
+  /* ---------- colour match: each photograph carries its five main colours in CIELAB with their share ---------- */
+  function pd(A, B) {                                   // how far apart two palettes sit: every colour finds its nearest, weighted by its share
+    let s = 0;
+    for (const a of A) { let m = 1e9; for (const b of B) { const d = Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]); if (d < m) m = d; } s += a[3] * m; }
+    for (const b of B) { let m = 1e9; for (const a of A) { const d = Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]); if (d < m) m = d; } s += b[3] * m; }
+    return s / 2;
+  }
+  function merged(items) {                              // the spread's own palette: the heaviest colours, none too close to another
+    const all = items.flatMap((it) => it.p).sort((a, b) => b[3] - a[3]), out = [];
+    for (const c of all) { const near = out.find((o) => Math.hypot(o[0] - c[0], o[1] - c[1], o[2] - c[2]) < 14); if (near) near[3] += c[3]; else if (out.length < 7) out.push(c.slice()); }
+    return out;
+  }
+  // the spreads, built by colour: a spread starts from the next photograph left and gathers the ones whose palettes sit closest to the group
+  function planHarmony(list) {
+    const left = list.slice(), spreads = [];
+    let k = 0;
+    while (left.length) {
+      let tpl = T[k % T.length].map((s) => s.slice());
+      if (Math.floor(k / T.length) % 2) tpl = tpl.map(([c, cs, r, rs]) => [26 - c - cs, cs, r, rs]);
+      const group = [left.shift()];
+      while (group.length < tpl.length + 1 && left.length) {
+        let bi = 0, bd = 1e9;
+        left.forEach((it, i) => { let d = 0; for (const g of group) d += pd(it.p, g.p); d /= group.length; if (d < bd) { bd = d; bi = i; } });
+        group.push(left.splice(bi, 1)[0]);
+      }
+      let fi = group.findIndex((it) => it.m && it.mw / it.mh < 0.8 && !it.x);
+      if (fi < 0) fi = group.findIndex((it) => it.w / it.h < 0.8 && !it.x);
+      const feature = fi >= 0 && group.length > tpl.length ? group.splice(fi, 1)[0] : null;
+      const order = tpl.map((s, i) => [i, Math.abs(Math.log(ar(s)))]).sort((a, b) => b[1] - a[1]).map((x) => x[0]);
+      const tiles = [];
+      for (const i of order) {
+        if (!group.length) break;
+        const tall = ar(tpl[i]) < 0.9, want = Math.log(ar(tpl[i])); let best = 0, bd = 1e9;
+        group.forEach((it, j) => { const d = Math.abs(Math.log(shape(it, tall)) - want) - (tall && it.m ? 0.35 : 0); if (d < bd) { bd = d; best = j; } });
+        const it = group.splice(best, 1)[0];
+        tiles.push({ slot: tpl[i], it, k: i, mob: tall && !!it.m });
+      }
+      tiles.sort((a, b) => a.k - b.k);
+      spreads.push({ tiles, feature, pal: merged(tiles.map((t) => t.it).concat(feature ? [feature] : [])) });
+      k++;
+    }
+    return spreads;
+  }
+  let harmony = false;
+  try { harmony = localStorage.getItem("mdg-harmony") === "1"; } catch (e) {}
+
+  const host = $("#spreads"), feat = $("#feature"), fimgs = feat.querySelectorAll("img");
+  let view = [], spreads = [], io = null, fOn = 0, fSrc = "", cur = "";
+  function render(c) {
+    cur = c;
+    const list = c ? ALL.filter((it) => it.c === c) : ALL;
+    spreads = harmony ? planHarmony(list) : plan(list);
+    document.body.classList.toggle("harmony", harmony);
+    $("#match").setAttribute("aria-pressed", String(harmony));
+    view = [];
+    host.innerHTML = "";
+    spreads.forEach((s, si) => {
+      const sec = document.createElement("section"); sec.className = "spread"; sec.dataset.i = si;
+      if (s.pal) {
+        const bar = document.createElement("div"); bar.className = "pal-bar"; bar.setAttribute("aria-hidden", "true");
+        const tot = s.pal.reduce((a, c) => a + c[3], 0);
+        s.pal.forEach((c) => { const i = document.createElement("i"); i.style.background = c[4]; i.style.flex = String(c[3] / tot); i.title = c[4].toUpperCase(); bar.appendChild(i); });
+        sec.appendChild(bar);
+      }
+      s.tiles.forEach(({ slot, it, mob }, n) => {
+        const b = document.createElement("button");
+        b.type = "button"; b.className = "t"; b.dataset.o = mob ? orient(it.mw, it.mh) : orient(it.w, it.h);
+        b.style.cssText = `--c:${slot[0]};--cs:${slot[1]};--r:${slot[2]};--rs:${slot[3]};--k:${n}`;
+        b.setAttribute("aria-label", "Open photograph " + (view.length + 1));
+        const im = new Image(); im.src = "img/" + (mob ? it.m : it.f); im.alt = ""; im.loading = si < 2 ? "eager" : "lazy"; im.decoding = "async"; im.width = mob ? it.mw : it.w; im.height = mob ? it.mh : it.h;
+        b.appendChild(im);
+        const at = view.length; b.addEventListener("click", () => open(at));
+        view.push(it); sec.appendChild(b);
+      });
+      if (s.feature) { s.featureAt = view.length; view.push(s.feature); }
+      host.appendChild(sec);
+    });
+    $("#count").textContent = view.length + " photographs" + (c ? " · " + CAT[c] : "");
+    io && io.disconnect();
+    io = new IntersectionObserver((es) => es.forEach((e) => {
+      if (e.isIntersecting) e.target.classList.add("in");
+      if (e.isIntersecting && e.intersectionRatio > 0.35) showFeature(+e.target.dataset.i);
+    }), { threshold: [0, 0.35] });
+    host.querySelectorAll(".spread").forEach((s) => io.observe(s));
+    showFeature(0);
+    buildIndex();
+  }
+  /* the left photograph crossfades to the one that belongs to the spread in view */
+  let fAt = -1;
+  function showFeature(si) {
+    const s = spreads[si]; if (!s || !s.feature) return;
+    const src = "img/" + (s.feature.m || s.feature.f); if (src === fSrc) return;
+    fSrc = src; fAt = s.featureAt;
+    const nxt = fimgs[1 - fOn]; nxt.src = src;
+    const go = () => { nxt.classList.add("on"); fimgs[fOn].classList.remove("on"); fOn = 1 - fOn; };
+    nxt.complete ? go() : nxt.addEventListener("load", go, { once: true });
+  }
+  feat.addEventListener("click", () => { if (fAt >= 0) open(fAt); });
+  feat.addEventListener("keydown", (e) => { if ((e.key === "Enter" || e.key === " ") && fAt >= 0) { e.preventDefault(); open(fAt); } });
+
+  /* menu: filters */
+  const btns = document.querySelectorAll("#menu button");
+  btns.forEach((b) => {
+    const c = b.dataset.c; b.querySelector("sup").textContent = c ? ALL.filter((it) => it.c === c).length : ALL.length;
+    b.addEventListener("click", () => {
+      btns.forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+      render(c); scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+    });
+  });
+
+  $("#match").addEventListener("click", () => {
+    harmony = !harmony;
+    try { localStorage.setItem("mdg-harmony", harmony ? "1" : "0"); } catch (e) {}
+    render(cur); scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+  });
+
+  /* index */
+  const index = $("#index"), burger = $("#burger");
+  function buildIndex() {
+    const g = $("#indexGrid"); g.innerHTML = "";
+    view.forEach((it, i) => { const b = document.createElement("button"); b.type = "button"; b.setAttribute("aria-label", "Open photograph " + (i + 1)); const im = new Image(); im.src = "img/" + it.f; im.alt = ""; im.loading = "lazy"; b.appendChild(im); b.addEventListener("click", () => open(i)); g.appendChild(b); });
+  }
+  function toggleIndex(on) { index.classList.toggle("open", on); burger.setAttribute("aria-expanded", String(on)); document.body.style.overflow = on ? "hidden" : ""; }
+  burger.addEventListener("click", () => toggleIndex(true));
+  $("#indexClose").addEventListener("click", () => toggleIndex(false));
+
+  /* lightbox */
+  const lb = $("#lb"), lbImg = $("#lbImg");
+  let at = 0;
+  function show(i) {
+    at = (i + view.length) % view.length; const it = view[at];
+    lbImg.classList.remove("on");
+    const pre = new Image(); pre.onload = pre.onerror = () => { lbImg.src = pre.src; requestAnimationFrame(() => lbImg.classList.add("on")); }; pre.src = "img/" + it.f;
+    $("#lbCat").textContent = CAT[it.c];
+    const chips = $("#lbChips"); chips.innerHTML = "";
+    it.p.forEach((c) => { const i = document.createElement("i"); i.style.background = c[4]; i.title = c[4].toUpperCase(); chips.appendChild(i); });
+    const near = $("#lbNear"); near.innerHTML = "";
+    view.map((o, j) => [pd(it.p, o.p), j]).filter(([, j]) => j !== at).sort((a, b) => a[0] - b[0]).slice(0, 8).forEach(([, j]) => {
+      const o = view[j], b = document.createElement("button"); b.type = "button"; b.setAttribute("aria-label", "Open photograph " + (j + 1));
+      const im = new Image(); im.src = "img/" + o.f; im.alt = ""; b.appendChild(im); b.addEventListener("click", () => show(j)); near.appendChild(b);
+    });
+    $("#lbNum").textContent = String(at + 1).padStart(3, "0") + " / " + String(view.length).padStart(3, "0");
+  }
+  function open(i) { lb.classList.add("open"); document.body.style.overflow = "hidden"; show(i); }
+  function close() { lb.classList.remove("open"); if (!index.classList.contains("open")) document.body.style.overflow = ""; }
+  $("#lbX").addEventListener("click", close);
+  ["#lbP", "#lbP2"].forEach((s) => $(s).addEventListener("click", () => show(at - 1)));
+  ["#lbN", "#lbN2"].forEach((s) => $(s).addEventListener("click", () => show(at + 1)));
+  addEventListener("keydown", (e) => {
+    if (lb.classList.contains("open")) { if (e.key === "Escape") close(); if (e.key === "ArrowLeft") show(at - 1); if (e.key === "ArrowRight") show(at + 1); }
+    else if (index.classList.contains("open") && e.key === "Escape") toggleIndex(false);
+  });
+  let sx = null;
+  lb.addEventListener("touchstart", (e) => { sx = e.touches[0].clientX; }, { passive: true });
+  lb.addEventListener("touchend", (e) => { if (sx === null) return; const d = e.changedTouches[0].clientX - sx; if (Math.abs(d) > 40) show(at + (d < 0 ? 1 : -1)); sx = null; });
+
+  render("");
+})();
+</script>
+</body></html>
