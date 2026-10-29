@@ -23,6 +23,7 @@ def entry(m):
     return e
 data = json.dumps([entry(m) for m in order], separators=(',', ':'))
 page = open('template.html', encoding='utf-8').read()
-page = page.replace('{{WORDMARK}}', open('.wordmark.svg', encoding='utf-8').read()).replace('{{MANIFEST}}', data)
+wm = open('.wordmark.svg', encoding='utf-8').read()
+page = page.replace('{{WORDMARK}}', wm).replace('{{WORDMARK_END}}', wm.replace('wmclip', 'wmclip-end')).replace('{{MANIFEST}}', data)
 open('index.html', 'w', encoding='utf-8').write(page)
 print(len(order), 'photographs')

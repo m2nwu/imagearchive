@@ -85,6 +85,13 @@
   .js .t { opacity: 0; transform: translateY(14px); transition: opacity 0.9s var(--ease), transform 1.1s var(--ease); transition-delay: calc(var(--k) * 60ms); }
   .js .spread.in .t { opacity: 1; transform: none; }
 
+  /* the close: one photograph across the whole width, the wordmark rising out of it in white — the garden's own logo film */
+  .finale { position: relative; height: 100vh; height: 100svh; margin-top: clamp(64px, 8vw, 120px); overflow: hidden; background: #111; }
+  .finale img { width: 100%; height: 100%; object-fit: cover; }
+  .finale::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(0,0,0,.28), rgba(0,0,0,.08) 70%); pointer-events: none; }
+  .finale .film { position: absolute; z-index: 1; left: 50%; top: 50%; width: min(78vw, 980px); transform: translate(-50%, -50%); }
+  .finale .film svg { display: block; width: 100%; height: auto; overflow: visible; fill: #fff; fill-rule: evenodd; }
+  @media (max-width: 860px) { .finale { height: 72svh; } .finale .film { width: 86vw; } }
   .foot { text-align: center; padding: clamp(56px, 7vw, 110px) 0 calc(36px + env(safe-area-inset-bottom, 0px)); font-size: 14px; }
   .foot p { margin: 0; }
   .foot .mute { color: var(--mute); margin-top: 6px; font-weight: 400; }
@@ -139,7 +146,7 @@
   <aside class="side">
     <div class="logo">
       <a class="mark" href="#top" aria-label="Médongaule, back to the top">{{WORDMARK}}</a>
-      <a class="visit" href="https://claude.ai/artifact/QK9midJN5oqGMwhNbscfcE" target="_blank" rel="noopener">Plan Your Visit <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M3 13L13 3M5 3h8v8"/></svg></a>
+      <a class="visit" href="https://claude.ai/artifact/P6kYTMQbA3mEa1BoG7J9Kd" target="_blank" rel="noopener">Plan Your Visit <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M3 13L13 3M5 3h8v8"/></svg></a>
     </div>
     <div class="feature" id="feature" role="button" tabindex="0" aria-label="Open this photograph"><img alt=""><img alt=""></div>
   </aside>
@@ -157,12 +164,16 @@
       </div>
     </header>
     <div id="spreads"></div>
-    <footer class="foot">
-      <p>1, Medeonggol-gil, Yangdong-myeon, Yangpyeong-gun, Gyeonggi-do / OPEN 10:00 AM - 06:00PM</p>
-      <p class="mute" id="count"></p>
-    </footer>
   </main>
 </div>
+<section class="finale" id="finale" aria-label="Médongaule">
+  <img src="img/end.jpg" alt="The forest around Médongaule from above, a single road running through it" loading="lazy" decoding="async">
+  <div class="film" aria-hidden="true">{{WORDMARK_END}}</div>
+</section>
+<footer class="foot">
+  <p>1, Medeonggol-gil, Yangdong-myeon, Yangpyeong-gun, Gyeonggi-do / OPEN 10:00 AM - 06:00PM</p>
+  <p class="mute" id="count"></p>
+</footer>
 
 <div class="index" id="index" aria-label="Index of every photograph">
   <div class="index-head"><span>Index</span><button class="burger" type="button" aria-label="Close the index" aria-expanded="true" id="indexClose"><i></i><i></i><i></i></button></div>
@@ -382,6 +393,34 @@
   let sx = null;
   lb.addEventListener("touchstart", (e) => { sx = e.touches[0].clientX; }, { passive: true });
   lb.addEventListener("touchend", (e) => { if (sx === null) return; const d = e.changedTouches[0].clientX - sx; if (Math.abs(d) > 40) show(at + (d < 0 ? 1 : -1)); sx = null; });
+
+  /* ---------- the logo film, exactly as the garden plays it, in white over the last photograph ---------- */
+  (() => {
+    const svg = document.querySelector("#finale svg"); if (!svg) return;
+    const ORDER = ["M", "e1", "d", "o", "n", "g", "a", "u", "l", "e2"], DUR = 6.0, CX = 684;
+    const cl = (v) => Math.max(0, Math.min(1, v)), oC = (x) => 1 - Math.pow(1 - x, 3), oE = (x) => (x >= 1 ? 1 : 1 - Math.pow(2, -10 * x));
+    const oB = (x) => { const c1 = 1.5, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+    const q = (k) => svg.querySelector('[data-k="' + k + '"]');
+    const letters = ORDER.map((k) => ({ el: q("L_" + k), cx: +q("L_" + k).getAttribute("data-cx") }));
+    const leaves = [{ el: q("F_leaf1"), px: 372, py: 280, start: 1.75, pcx: +q("L_e1").getAttribute("data-cx") }, { el: q("F_leaf2"), px: 809, py: 280, start: 1.95, pcx: +q("L_g").getAttribute("data-cx") }];
+    function frame(t) {
+      const spread = 0.09 * (1 - oC(cl((t - 0.25) / 2.2)));
+      letters.forEach((L, i) => { const lt = cl((t - (0.3 + i * 0.075)) / 1.05); L.el.setAttribute("transform", "translate(" + ((L.cx - CX) * spread).toFixed(2) + " " + (270 * (1 - oE(lt))).toFixed(2) + ")"); });
+      leaves.forEach((F) => {
+        const lt = cl((t - F.start) / 0.85), s = Math.max(0.0001, oB(lt)); let rot = -48 * (1 - oC(lt)); const after = t - F.start - 0.85;
+        if (after > 0) rot += 4 * Math.sin(after * 6.5) * Math.exp(-after * 2.6);
+        F.el.setAttribute("transform", "translate(" + ((F.pcx - CX) * spread).toFixed(2) + " 0) translate(" + F.px + " " + F.py + ") rotate(" + rot.toFixed(2) + ") scale(" + s.toFixed(4) + ") translate(" + (-F.px) + " " + (-F.py) + ")");
+      });
+    }
+    let raf = 0, playing = false;
+    function play() { if (playing) return; playing = true; const t0 = performance.now(); const step = (now) => { const t = Math.min(DUR, (now - t0) / 1000); frame(t); if (t < DUR) raf = requestAnimationFrame(step); }; raf = requestAnimationFrame(step); }
+    function reset() { cancelAnimationFrame(raf); playing = false; frame(0); }
+    if (reduce) { frame(DUR); return; }
+    frame(0);
+    // it plays each time the photograph is mostly in view, and starts again from nothing once it has left
+    new IntersectionObserver((es) => es.forEach((e) => { if (e.intersectionRatio >= 0.55) play(); else if (!e.isIntersecting) reset(); }), { threshold: [0, 0.55] }).observe(document.getElementById("finale"));
+    window.__finale = { frame };
+  })();
 
   render("");
 })();
