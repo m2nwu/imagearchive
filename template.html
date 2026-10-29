@@ -148,7 +148,7 @@
       <a class="mark" href="#top" aria-label="Médongaule, back to the top">{{WORDMARK}}</a>
       <a class="visit" href="https://claude.ai/artifact/P6kYTMQbA3mEa1BoG7J9Kd" target="_blank" rel="noopener">Plan Your Visit <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M3 13L13 3M5 3h8v8"/></svg></a>
     </div>
-    <div class="feature" id="feature" role="button" tabindex="0" aria-label="Open this photograph"><img alt=""><img alt=""></div>
+    <div class="feature" id="feature" role="button" tabindex="0" aria-label="Open this photograph"><img alt="" fetchpriority="high"><img alt=""></div>
   </aside>
   <main class="main" id="top">
     <header class="top">
@@ -220,6 +220,7 @@
       // the tall photograph in the left column for this spread
       let fi = q.slice(0, 18).findIndex((it) => it.m && it.mw / it.mh < 0.8 && !it.x);
       if (fi < 0) fi = q.slice(0, 14).findIndex((it) => it.w / it.h < 0.8 && !it.x);
+      if (fi < 0 && q.length > tpl.length) { let lo = 9; q.slice(0, 18).forEach((it, j) => { const a = (it.m ? it.mw / it.mh : it.w / it.h); if (!it.x && a < lo) { lo = a; fi = j; } }); }
       const feature = fi >= 0 ? q.splice(fi, 1)[0] : null;
       for (const i of order) {
         if (!q.length) break;
@@ -265,6 +266,7 @@
       }
       let fi = group.findIndex((it) => it.m && it.mw / it.mh < 0.8 && !it.x);
       if (fi < 0) fi = group.findIndex((it) => it.w / it.h < 0.8 && !it.x);
+      if (fi < 0 && group.length > tpl.length) { let lo = 9; group.forEach((it, j) => { const a = (it.m ? it.mw / it.mh : it.w / it.h); if (!it.x && a < lo) { lo = a; fi = j; } }); }
       const feature = fi >= 0 && group.length > tpl.length ? group.splice(fi, 1)[0] : null;
       const order = tpl.map((s, i) => [i, Math.abs(Math.log(ar(s)))]).sort((a, b) => b[1] - a[1]).map((x) => x[0]);
       const tiles = [];
@@ -330,7 +332,8 @@
   function showFeature(si) {
     const s = spreads[si]; if (!s || !s.feature) return;
     const src = "img/" + (s.feature.m || s.feature.f); if (src === fSrc) return;
-    fSrc = src; fAt = s.featureAt;
+    const first = !fSrc; fSrc = src; fAt = s.featureAt;
+    if (first) { fimgs[0].src = src; fimgs[0].classList.add("on"); fOn = 0; return; }   // the first one is simply there, no fade
     const nxt = fimgs[1 - fOn]; nxt.src = src;
     const go = () => { nxt.classList.add("on"); fimgs[fOn].classList.remove("on"); fOn = 1 - fOn; };
     nxt.complete ? go() : nxt.addEventListener("load", go, { once: true });
