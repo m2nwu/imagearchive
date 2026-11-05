@@ -52,7 +52,7 @@
   /* left: the logo box with its visit bar, and one tall photograph that follows the spread in view */
   .side { position: sticky; top: 38px; align-self: start; display: grid; row-gap: 16px; }
   .logo { display: grid; border: 2px solid var(--line); background: var(--bg); }
-  .logo .mark { display: grid; place-items: center; aspect-ratio: 190 / 188; padding: 0 7.5%; }
+  .logo .mark { display: grid; place-items: center; aspect-ratio: 1; padding: 0 7.5%; }
   .logo .mark svg { width: 100%; height: auto; overflow: visible; fill: var(--fg); fill-rule: evenodd; }
   .logo .visit { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px 7px; background: var(--fg); color: var(--bg); font-weight: 400; font-size: 16px; letter-spacing: -0.01em; }
   .logo .visit svg { width: 15px; height: 15px; transition: transform 0.4s var(--ease); }
@@ -174,7 +174,7 @@
 <div class="page">
   <aside class="side">
     <div class="logo">
-      <a class="mark" href="#top" aria-label="Médongaule, back to the top">{{LOGO}}</a>
+      <a class="mark" href="#top" aria-label="Médongaule, back to the top">{{WORDMARK}}</a>
       <a class="visit" href="https://claude.ai/artifact/P6kYTMQbA3mEa1BoG7J9Kd" target="_blank" rel="noopener">Plan Your Visit <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M3 13L13 3M5 3h8v8"/></svg></a>
     </div>
     <div class="feature" id="feature" role="button" tabindex="0" aria-label="Open this photograph"><img alt="" fetchpriority="high"><img alt=""></div>

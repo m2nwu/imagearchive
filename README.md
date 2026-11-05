@@ -14,4 +14,4 @@ The web-size photographs of Médongaule, Yangpyeong, set as collage spreads afte
 python3 build.py
 ```
 
-`template.html` + `.tree.path` (the tree, traced from the supplied logo) + `manifest.json` (photographs, sizes, mobile crops) + `palettes.json` (five CIELAB colours per photograph) → `index.html`.
+`template.html` + `manifest.json` (photographs, sizes, mobile crops) + `palettes.json` (five CIELAB colours per photograph) → `index.html`.

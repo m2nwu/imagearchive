@@ -24,8 +24,6 @@ def entry(m):
 data = json.dumps([entry(m) for m in order], separators=(',', ':'))
 page = open('template.html', encoding='utf-8').read()
 wm = open('.wordmark.svg', encoding='utf-8').read()
-tree = open('.tree.path', encoding='utf-8').read()            # traced from the logo the client supplied; the letters stay the vector wordmark
-logo = wm.replace('viewBox="185 218 1000 212"', 'viewBox="185 -24 1000 496"').replace('<defs>', '<path d="' + tree + '"/><defs>', 1).replace('wmclip', 'wmclip-logo')
-page = page.replace('{{LOGO}}', logo).replace('{{WORDMARK}}', wm).replace('{{WORDMARK_END}}', wm.replace('wmclip', 'wmclip-end')).replace('{{MANIFEST}}', data)
+page = page.replace('{{WORDMARK}}', wm).replace('{{WORDMARK_END}}', wm.replace('wmclip', 'wmclip-end')).replace('{{MANIFEST}}', data)
 open('index.html', 'w', encoding='utf-8').write(page)
 print(len(order), 'photographs')
