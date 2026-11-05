@@ -90,10 +90,11 @@ img { display: block; max-width: 100%; }
 .ch { position: relative; }
 .wmrun { position: relative; height: 380vh; }
 .wmpin { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; background: var(--orange); }
-.wmbig { position: absolute; left: 50%; top: 50%; width: min(80vw, 1240px); transform: translate(-50%, -50%); }
+.wmbig { position: absolute; left: 50%; top: 50%; width: min(80vw, 1240px); transform: translate(-50%, -50%); will-change: transform; }
 .wmbig .lf { transform-box: fill-box; transform-origin: 0% 100%; }
-.wmcon { position: absolute; inset: 0; background: var(--beige); display: grid; align-items: center; justify-items: center; clip-path: inset(100% 0 0 0); will-change: clip-path; }
-.wmcon .board { width: min(100%, calc((100svh - 230px) * 2.111)); }
+.wmcon { position: absolute; inset: 0; overflow: hidden; transform: translate3d(0, 100%, 0); will-change: transform; }
+.wmin { position: absolute; inset: 0; background: var(--beige); display: grid; align-items: center; justify-items: center; transform: translate3d(0, -100%, 0); will-change: transform; }
+.wmcon .board { width: min(100%, calc((100svh - 230px) * 2.111)); will-change: transform; }
 .wmcon .k { --g: 0; --t: 0; }
 .wmcon .gh { transform-box: fill-box; transform-origin: 0 50%; transform: scaleX(var(--g)); }
 .wmcon .gv { transform-box: fill-box; transform-origin: 50% 0; transform: scaleY(var(--g)); }
@@ -218,7 +219,7 @@ img { display: block; max-width: 100%; }
     <div class="wmrun" id="wmrun">
       <div class="wmpin">
         <div class="wmbig" id="wmbig" data-wm></div>
-        <div class="wmcon" id="wmcon"><div class="board" data-svg="brand/ab4.svg" data-key="b4" role="img" aria-label="Construction of the wordmark on its grid, with the customised terminals of c, f, g, r and t"></div></div>
+        <div class="wmcon" id="wmcon"><div class="wmin" id="wmin"><div class="board" data-svg="brand/ab4.svg" data-key="b4" role="img" aria-label="Construction of the wordmark on its grid, with the customised terminals of c, f, g, r and t"></div></div></div>
         <div class="pl" id="wmpl"><p class="lab">Wordmark</p><p class="lab" id="wmph">Maple Orange</p></div>
         <div class="steps" id="wmst">
           <div><p class="lab">01 Lettering</p><i></i></div>
@@ -406,7 +407,7 @@ img { display: block; max-width: 100%; }
   $$('.wv[data-svg]').forEach(function (h) { inline(h).then(function (svg) { wave(svg, h); }); });
 
   /* construction board: rules draw, terminals arrive cell by cell */
-  var con = $('#wmcon .board'), conK = null, conM = null, land = null;
+  var con = $('#wmcon .board'), conK = null, conM = null, land = null, conOff = { x: 0, y: 0 };
   inline(con).then(function (svg) {
     conK = svg; svg.classList.add('k');
     var g = [].slice.call(svg.children).filter(function (c) { return c.tagName === 'g' && c.getBBox().width > 600; })[0];
@@ -504,18 +505,20 @@ img { display: block; max-width: 100%; }
   $$('[data-rv]').forEach(function (el) { rio.observe(el); });
 
   /* ---------- frame loop ---------- */
+  var gS = '', tS = '', lfLive = true, wmin = $('#wmin');
   var wmrun = $('#wmrun'), wmbig = $('#wmbig'), wmcon = $('#wmcon'), wmpl = $('#wmpl'), wmph = $('#wmph'), wmst = $('#wmst'), stepD = $$('div', wmst), stepI = stepD.map(function (d) { return $('i', d); });
   var bigLf = $$('#wmbig [data-k^="F_"]');
   var obs = $$('[data-ob]'), pat = $('#patterns');
   function measureLand() {
     if (!conM) return;
-    var keep = wmbig.style.transform;
-    wmbig.style.transform = 'translate(-50%,-50%)';
+    var keep = wmbig.style.transform, keepB = con.style.transform;
+    wmbig.style.transform = 'translate(-50%,-50%)'; con.style.transform = 'none';
     var B = wmbig.getBoundingClientRect(), m0 = $('[data-k="L_M"]', wmbig).getBoundingClientRect(), m1 = conM.getBoundingClientRect();
-    wmbig.style.transform = keep;
+    wmbig.style.transform = keep; con.style.transform = keepB;
     if (!m0.width) return;
     var k = m1.width / m0.width, bx = B.left + B.width / 2, by = B.top + B.height / 2;
-    land = { k: k, tx: m1.left - bx - (m0.left - bx) * k, ty: m1.bottom - by - (m0.bottom - by) * k };
+    land = { k: k };
+    conOff = { x: -(m1.left - bx - (m0.left - bx) * k), y: -(m1.bottom - by - (m0.bottom - by) * k) };
   }
 
   var geo = { ob: [] }, dotI = dots.map(function (b) { return $('i', b); }), panelC = [], panelA = [], panelW = [];
@@ -545,11 +548,17 @@ img { display: block; max-width: 100%; }
     if (wmIn || wmWas) {
       var wp = along(geo.wm, y, vh);
       var z = 1.14 - ss(0, .2, wp) * .14, a = land ? outCubic(ss(.2, .36, wp)) : 0;
-      wmbig.style.transform = 'translate(-50%,-50%) translate(' + (a * (land ? land.tx : 0)).toFixed(2) + 'px,' + (a * (land ? land.ty : 0)).toFixed(2) + 'px) scale(' + lerp(z, land ? land.k : z, a).toFixed(4) + ')';
-      bigLf.forEach(function (l, j) { l.style.transform = 'rotate(' + (Math.sin(wp * Math.PI * 4 + j * 1.7) * 16 * (1 - ss(.12, .24, wp))).toFixed(2) + 'deg)'; });
-      var wipe = ss(.36, .56, wp);
-      wmcon.style.clipPath = 'inset(' + ((1 - wipe) * 100).toFixed(2) + '% 0 0 0)';
-      if (conK) { conK.style.setProperty('--g', ss(.56, .74, wp).toFixed(4)); conK.style.setProperty('--t', ss(.74, .96, wp).toFixed(4)); }
+      wmbig.style.transform = 'translate(-50%,-50%) scale(' + lerp(z, land ? land.k : z, a).toFixed(4) + ')';
+      if (wp < .26 || lfLive) { lfLive = wp < .26; bigLf.forEach(function (l, j) { l.style.transform = 'rotate(' + (Math.sin(wp * Math.PI * 4 + j * 1.7) * 16 * (1 - ss(.12, .24, wp))).toFixed(2) + 'deg)'; }); }
+      var wipe = ss(.36, .56, wp), wy = ((1 - wipe) * 100).toFixed(3);
+      wmcon.style.transform = 'translate3d(0,' + wy + '%,0)'; wmin.style.transform = 'translate3d(0,-' + wy + '%,0)';
+      var u = 1 - ss(.58, .72, wp);
+      con.style.transform = 'translate3d(' + (conOff.x * u).toFixed(2) + 'px,' + (conOff.y * u).toFixed(2) + 'px,0)';
+      if (conK) {
+        var gv = ss(.56, .74, wp).toFixed(4), tv = ss(.74, .96, wp).toFixed(4);
+        if (gv !== gS) { gS = gv; conK.style.setProperty('--g', gv); }
+        if (tv !== tS) { tS = tv; conK.style.setProperty('--t', tv); }
+      }
       var dk = wipe > .5;
       wmpl.classList.toggle('dk', dk); wmst.classList.toggle('dk', dk);
       var ph = wp < .46 ? 'Maple Orange' : wp < .74 ? 'Mugwort Beige · Grid' : 'c f g r t';
