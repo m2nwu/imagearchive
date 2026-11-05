@@ -14,7 +14,7 @@
     --mute: #8a8a85;
     --line: #111111;
     --gap: 10px;
-    --side: 190px;
+    --side: clamp(170px, 10vw, 210px);
     --pad: clamp(16px, 3.2vw, 64px);
     --ease: cubic-bezier(0.16, 1, 0.3, 1);
   }
@@ -28,12 +28,31 @@
   img { display: block; max-width: 100%; }
   :focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
 
-  .page { display: grid; grid-template-columns: var(--side) minmax(0, 1fr); column-gap: clamp(28px, 3.3vw, 64px); padding: 38px var(--pad) 0; }
+  /* the front: the building from above, full width, the address on a white strip beneath it. The logo box and the menu
+     are the page's own, so they stay where they are as the photograph scrolls away from under them. */
+  .front { position: absolute; left: 0; right: 0; top: 0; height: 100vh; height: 100svh; display: grid; grid-template-rows: minmax(0, 1fr) auto; }
+  .front picture { display: block; min-height: 0; }
+  .front img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 42%; }
+  .front p { margin: 0; padding: 30px var(--pad) 32px; text-align: center; font-size: clamp(13px, 0.8vw, 15px); background: var(--bg); }
+
+  .page { position: relative; z-index: 1; display: grid; grid-template-columns: var(--side) minmax(0, 1fr); column-gap: clamp(28px, 3.3vw, 64px); padding: 38px var(--pad) 0; }
+  #spreads { margin-top: calc(100vh - 98px + clamp(40px, 4vw, 72px)); margin-top: calc(100svh - 98px + clamp(40px, 4vw, 72px)); }
+  .harmony #spreads { margin-top: calc(100svh - 98px + clamp(28px, 3vw, 56px)); }
+  .feature { transition: opacity 0.6s var(--ease); }
+  @media (min-width: 861px) {
+    .over .feature { opacity: 0; pointer-events: none; }
+    .top { transition: background-color 0.35s var(--ease), color 0.35s var(--ease); }
+    .over .top { background: transparent; color: #ffffff; text-shadow: 0 0 14px rgba(0, 0, 0, 0.55); }
+    .over .menu sup { color: rgba(255, 255, 255, 0.85); }
+    .over .burger i { box-shadow: 0 0 10px rgba(0, 0, 0, 0.4); }
+    .over .match { border-color: #ffffff; }
+    .over .match[aria-pressed="true"] { background: #ffffff; color: #111111; text-shadow: none; }
+  }
 
   /* left: the logo box with its visit bar, and one tall photograph that follows the spread in view */
   .side { position: sticky; top: 38px; align-self: start; display: grid; row-gap: 16px; }
   .logo { display: grid; border: 2px solid var(--line); background: var(--bg); }
-  .logo .mark { display: grid; place-items: center; aspect-ratio: 190 / 188; padding: 0 16px; }
+  .logo .mark { display: grid; place-items: center; aspect-ratio: 190 / 188; padding: 0 7.5%; }
   .logo .mark svg { width: 100%; height: auto; overflow: visible; fill: var(--fg); fill-rule: evenodd; }
   .logo .visit { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px 7px; background: var(--fg); color: var(--bg); font-weight: 400; font-size: 16px; letter-spacing: -0.01em; }
   .logo .visit svg { width: 15px; height: 15px; transition: transform 0.4s var(--ease); }
@@ -45,7 +64,7 @@
   /* top: the menu, which filters the archive, and the index */
   .top { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 0 0 22px; margin-top: -4px; background: var(--bg); }
   .menu { display: flex; gap: clamp(22px, 3.3vw, 52px); font-weight: 600; font-size: clamp(15px, 1.1vw, 20px); letter-spacing: 0.01em; text-transform: uppercase; }
-  .menu button { position: relative; padding: 4px 0; }
+  .menu button { position: relative; padding: 4px 0; text-transform: uppercase; white-space: nowrap; }
   .menu button::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: currentColor; transform: scaleX(0); transform-origin: left; transition: transform 0.5s var(--ease); }
   .menu button:hover::after, .menu button[aria-pressed="true"]::after { transform: scaleX(1); }
   .menu sup { font-size: 0.55em; font-weight: 500; margin-left: 3px; color: var(--mute); }
@@ -122,11 +141,17 @@
 
   @media (max-width: 860px) {
     :root { --side: 100%; }
-    .page { grid-template-columns: minmax(0, 1fr); padding-top: 20px; }
-    .side { position: static; grid-template-columns: 150px minmax(0, 1fr); column-gap: 14px; margin-bottom: 18px; }
-    .feature { aspect-ratio: auto; height: 100%; }
+    .front { position: relative; height: auto; }
+    .front picture { height: calc(100svh - 170px); }
+    .front p { padding: 18px 16px 20px; }
+    .page { position: static; grid-template-columns: minmax(0, 1fr); padding-top: 6px; }
+    .side { position: static; display: block; }
+    .logo { position: absolute; left: 16px; top: 16px; z-index: 2; width: 132px; }
+    .feature { display: none; }
+    #spreads, .harmony #spreads { margin-top: 6px; }
     .top { padding-bottom: 14px; }
-    .menu { gap: 18px; font-size: 14px; overflow-x: auto; }
+    .menu { gap: 14px; font-size: 13px; overflow-x: auto; }
+    .menu sup { display: none; }
     .match span { display: none; }
     .harmony .t { grid-row: auto; }
     .harmony .spread { grid-auto-rows: auto; grid-template-rows: auto; }
@@ -141,11 +166,15 @@
     .t img, .feature img { transition: none; }
   }
 </style></head>
-<body>
+<body class="over">
+<section class="front" aria-label="Médongaule">
+  <picture><source media="(max-width: 860px)" srcset="img/g114m.jpg"><img src="img/front.jpg" alt="A long pale building folded around a pool, seen from above, autumn trees on the hillside behind it" fetchpriority="high" decoding="async"></picture>
+  <p>1, Medeonggol-gil, Yangdong-myeon, Yangpyeong-gun, Gyeonggi-do / OPEN 10:00 AM - 06:00PM</p>
+</section>
 <div class="page">
   <aside class="side">
     <div class="logo">
-      <a class="mark" href="#top" aria-label="Médongaule, back to the top">{{WORDMARK}}</a>
+      <a class="mark" href="#top" aria-label="Médongaule, back to the top">{{LOGO}}</a>
       <a class="visit" href="https://claude.ai/artifact/P6kYTMQbA3mEa1BoG7J9Kd" target="_blank" rel="noopener">Plan Your Visit <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M3 13L13 3M5 3h8v8"/></svg></a>
     </div>
     <div class="feature" id="feature" role="button" tabindex="0" aria-label="Open this photograph"><img alt="" fetchpriority="high"><img alt=""></div>
@@ -341,20 +370,25 @@
   feat.addEventListener("click", () => { if (fAt >= 0) open(fAt); });
   feat.addEventListener("keydown", (e) => { if ((e.key === "Enter" || e.key === " ") && fAt >= 0) { e.preventDefault(); open(fAt); } });
 
+  /* the menu goes light over the front photograph; a filter takes you straight to the photographs */
+  const frontImg = $(".front picture");
+  const overFront = () => document.body.classList.toggle("over", scrollY < frontImg.offsetHeight - 70);
+  addEventListener("scroll", overFront, { passive: true }); addEventListener("resize", overFront); overFront();
+  const toArchive = () => { const top = host.getBoundingClientRect().top + scrollY - 92; scrollTo({ top: Math.max(0, top), behavior: reduce ? "auto" : "smooth" }); };
   /* menu: filters */
   const btns = document.querySelectorAll("#menu button");
   btns.forEach((b) => {
     const c = b.dataset.c; b.querySelector("sup").textContent = c ? ALL.filter((it) => it.c === c).length : ALL.length;
     b.addEventListener("click", () => {
       btns.forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
-      render(c); scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+      render(c); toArchive();
     });
   });
 
   $("#match").addEventListener("click", () => {
     harmony = !harmony;
     try { localStorage.setItem("mdg-harmony", harmony ? "1" : "0"); } catch (e) {}
-    render(cur); scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+    render(cur); toArchive();
   });
 
   /* index */
